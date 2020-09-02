@@ -14,7 +14,7 @@ namespace Prometheus.HttpMetrics
         /// Metric labels are automatically added for these parameters, unless you provide your
         /// own metric instance in the options (in which case you must add the required labels).
         /// </remarks>
-        public List<HttpRouteParameterMapping> AdditionalRouteParameters { get; set; } = new List<HttpRouteParameterMapping>();
+        public List<HttpParameterMapping> AdditionalParameters { get; set; } = new List<HttpParameterMapping>();
 
         /// <summary>
         /// Allows you to override the registry used to create the default metric instance.

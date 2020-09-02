@@ -11,11 +11,11 @@ namespace Prometheus.HttpMetrics
         /// 
         /// Helper method to avoid manually adding it to each one.
         /// </summary>
-        public void AddRouteParameter(HttpRouteParameterMapping mapping)
+        public void AddRouteParameter(HttpParameterMapping mapping)
         {
-            InProgress.AdditionalRouteParameters.Add(mapping);
-            RequestCount.AdditionalRouteParameters.Add(mapping);
-            RequestDuration.AdditionalRouteParameters.Add(mapping);
+            InProgress.AdditionalParameters.Add(mapping);
+            RequestCount.AdditionalParameters.Add(mapping);
+            RequestDuration.AdditionalParameters.Add(mapping);
         }
     }
 }

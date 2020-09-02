@@ -9,6 +9,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Prometheus.HttpMetrics;
 
 namespace tester
 {
@@ -29,13 +30,29 @@ namespace tester
                 .UseUrls($"http://localhost:{TesterConstants.TesterPort}")
                 .ConfigureServices(services =>
                 {
+                    services.AddControllers();
                 })
                 .Configure(app =>
                 {
                     app.UseMetricServer();
 
                     app.UseRouting();
-                    app.UseHttpMetrics();
+
+                    app.UseHttpMetrics(options =>
+                    {
+                        // add label "cluster" for all metrics
+                        options.AddRouteParameter(new HttpStaticParameterMapping("cluster", "western_europe"));
+                        // add label "myparam" only for duration
+                        options.RequestDuration.AdditionalParameters.Add(new HttpRouteParameterMapping("myparam"));
+                        // add label "method_param" only for counts
+                        options.RequestCount.AdditionalParameters.Add(new HttpRouteParameterMapping("method", "method_param"));
+                    });
+
+                    // keep it at latest regitration
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapControllers();
+                    });
                 })
                 .ConfigureLogging(logging => logging.ClearProviders())
                 .Build()
@@ -45,7 +62,7 @@ namespace tester
         public override void OnTimeToObserveMetrics()
         {
             // Every time we observe metrics, we also asynchronously perform a dummy request for test data.
-            StartDummyRequest();
+            //StartDummyRequest();
 
             var httpRequest = (HttpWebRequest)WebRequest.Create($"http://localhost:{TesterConstants.TesterPort}/metrics");
             httpRequest.Method = "GET";

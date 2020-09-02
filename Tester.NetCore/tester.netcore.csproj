@@ -6,6 +6,7 @@
     <RootNamespace>tester</RootNamespace>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>prometheus-net.snk</AssemblyOriginatorKeyFile>
+    <StartupObject>tester.Program</StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -16,14 +17,14 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <LangVersion>latest</LangVersion>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <DocumentationFile>C:\workspace\prometheus-net-master\Tester.NetCore\Tester.NetCore.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Tester.NetFramework\Controllers\DummyController.cs" Link="Controllers\DummyController.cs" />
     <Compile Include="..\Tester.NetFramework\KestrelMetricServerTester.cs" Link="KestrelMetricServerTester.cs" />
     <Compile Include="..\Tester.NetFramework\MetricPusherTester.cs" Link="MetricPusherTester.cs" />
     <Compile Include="..\Tester.NetFramework\MetricServerTester.cs" Link="MetricServerTester.cs" />
@@ -51,10 +52,6 @@
     <None Update="prometheus-net.test.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

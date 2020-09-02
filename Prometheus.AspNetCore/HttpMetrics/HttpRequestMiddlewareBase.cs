@@ -48,10 +48,11 @@ namespace Prometheus.HttpMetrics
         /// </summary>
         protected MetricFactory MetricFactory { get; }
 
-        private readonly ICollection<HttpRouteParameterMapping> _additionalRouteParameters;
+        //private readonly ICollection<HttpParameterMapping> _routeParameters;
+
         private readonly TCollector _metric;
 
-        private readonly Dictionary<string, string> _labelToRouteParameterMap;
+        private readonly Dictionary<string, HttpParameterMapping> _labelToRouteParameterMap;
 
         private readonly bool _labelsRequireRouteData;
 
@@ -59,10 +60,21 @@ namespace Prometheus.HttpMetrics
         {
             MetricFactory = Metrics.WithCustomRegistry(options?.Registry ?? Metrics.DefaultRegistry);
 
-            _additionalRouteParameters = options?.AdditionalRouteParameters ?? new List<HttpRouteParameterMapping>(0);
+            _labelToRouteParameterMap = CreateDefaultsRouteParametersMap();
 
-            ValidateAdditionalRouteParameterSet();
-            _labelToRouteParameterMap = CreateLabelToRouteParameterMap();
+            if (options?.AdditionalParameters != null)
+            {
+                ValidateAdditionalParameterSet(options.AdditionalParameters);
+
+                var additionlParams = CreateAditionalRouteParameterMap(options.AdditionalParameters);
+                if (additionlParams.Any())
+                {
+                    foreach (var entry in additionlParams)
+                        _labelToRouteParameterMap.Add(entry.Key, entry.Value);
+                }
+            }           
+
+            //_labelToRouteParameterMap = CreateLabelToRouteParameterMap();
 
             if (customMetric != null)
             {
@@ -118,9 +130,11 @@ namespace Prometheus.HttpMetrics
                         labelValues[i] = context.Response.StatusCode.ToString(CultureInfo.InvariantCulture);
                         break;
                     default:
-                        // We validate the label set on initialization, so it must be a route parameter if we get to this point.
-                        var parameterName = _labelToRouteParameterMap[_metric.LabelNames[i]];
-                        labelValues[i] = routeData?[parameterName] as string ?? string.Empty;
+                        // We validate the label set on initialization, so it must be a route parameter(or static) if we get to this point.
+
+                        //var parameterName = _labelToRouteParameterMap[_metric.LabelNames[i]];
+                        //labelValues[i] = routeData?[parameterName] as string ?? string.Empty;
+                        labelValues[i] = _labelToRouteParameterMap[_metric.LabelNames[i]].GetValue(context, routeData);
                         break;
                 }
             }
@@ -136,41 +150,57 @@ namespace Prometheus.HttpMetrics
         /// </summary>
         private string[] CreateDefaultLabelSet()
         {
-            return DefaultLabels.Concat(_additionalRouteParameters.Select(x => x.LabelName)).ToArray();
+            // as we are creating 2 default mappings with values already included in DefaultLabels we need use Except() here to avoid duplications
+            var defaultsRouteLabels = CreateDefaultsRouteParametersMap().Select(x => x.Key);
+            return DefaultLabels.Concat(_labelToRouteParameterMap.Select(x => x.Key).Except(defaultsRouteLabels)).ToArray();
         }
 
-        private void ValidateAdditionalRouteParameterSet()
+        private void ValidateAdditionalParameterSet(List<HttpParameterMapping> additionalParameters)
         {
-            var parameterNames = _additionalRouteParameters.Select(x => x.ParameterName).ToList();
+            /* dont validate parameterName, as they are class instances onstead of simple string, each instance can implement whatever it wants
+             * even if it is a duplicate para name, the implementation could be different based on some context values
+            var parameterNames = _additionalParameters.Select(x => x.ParameterName).ToList();
 
             if (parameterNames.Distinct(StringComparer.InvariantCultureIgnoreCase).Count() != parameterNames.Count)
-                throw new ArgumentException("The set of additional route parameters to track contains multiple entries with the same parameter name.", nameof(HttpMetricsOptionsBase.AdditionalRouteParameters));
-
-            var labelNames = _additionalRouteParameters.Select(x => x.LabelName).ToList();
+                throw new ArgumentException("The set of additional route parameters to track contains multiple entries with the same parameter name.", nameof(HttpMetricsOptionsBase.AdditionalParameters));
+            */
+            var labelNames = _labelToRouteParameterMap.Select(x => x.Key).ToList();
 
             if (labelNames.Distinct(StringComparer.InvariantCultureIgnoreCase).Count() != labelNames.Count)
-                throw new ArgumentException("The set of additional route parameters to track contains multiple entries with the same label name.", nameof(HttpMetricsOptionsBase.AdditionalRouteParameters));
+                throw new ArgumentException("The set of additional route parameters to track contains multiple entries with the same label name.", nameof(HttpMetricsOptionsBase.AdditionalParameters));
 
-            if (HttpRequestLabelNames.All.Except(labelNames, StringComparer.InvariantCultureIgnoreCase).Count() != HttpRequestLabelNames.All.Length)
+            var additionalLabels = additionalParameters.Select(x => x.LabelName).ToList();
+            if (HttpRequestLabelNames.All.Except(additionalLabels, StringComparer.InvariantCultureIgnoreCase).Count() != HttpRequestLabelNames.All.Length)
                 throw new ArgumentException($"The set of additional route parameters to track contains an entry with a reserved label name. Reserved label names are: {string.Join(", ", HttpRequestLabelNames.All)}");
 
+            /* reserved labels will be checked above as duplicated entries
             var reservedParameterNames = new[] { "action", "controller" };
 
             if (reservedParameterNames.Except(parameterNames, StringComparer.InvariantCultureIgnoreCase).Count() != reservedParameterNames.Length)
                 throw new ArgumentException($"The set of additional route parameters to track contains an entry with a reserved route parameter name. Reserved route parameter names are: {string.Join(", ", reservedParameterNames)}");
+            */
         }
 
-        private Dictionary<string, string> CreateLabelToRouteParameterMap()
+        private Dictionary<string, HttpParameterMapping> CreateDefaultsRouteParametersMap()
         {
-            var map = new Dictionary<string, string>(_additionalRouteParameters.Count + 2);
+            var map = new Dictionary<string, HttpParameterMapping>(2);
 
             // Defaults are hardcoded.
-            map["action"] = "action";
-            map["controller"] = "controller";
+            map["action"] = new HttpRouteParameterMapping("action");
+            map["controller"] = new HttpRouteParameterMapping("controller");
 
-            // Any additional ones are merged.
-            foreach (var entry in _additionalRouteParameters)
-                map[entry.LabelName] = entry.ParameterName;
+            return map;
+        }
+
+        private Dictionary<string, HttpParameterMapping> CreateAditionalRouteParameterMap(List<HttpParameterMapping> additionalParameters)
+        {
+            var map = new Dictionary<string, HttpParameterMapping>();
+
+            if (additionalParameters.Any())
+            {
+                foreach (var entry in additionalParameters)
+                    map.Add(entry.LabelName, entry);
+            }
 
             return map;
         }
@@ -184,7 +214,7 @@ namespace Prometheus.HttpMetrics
         /// </remarks>
         private void ValidateAdditionalRouteParametersPresentInMetricLabelNames()
         {
-            var labelNames = _additionalRouteParameters.Select(x => x.LabelName).ToList();
+            var labelNames = _labelToRouteParameterMap.Select(x => x.Key).ToList();
             var missing = labelNames.Except(_metric.LabelNames);
 
             if (missing.Any())

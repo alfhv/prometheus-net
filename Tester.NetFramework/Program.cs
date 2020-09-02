@@ -17,8 +17,8 @@ namespace tester
             // Replace the first line with an appropriate type of tester to run different manual tests.
             //var tester = new MetricPusherTester();
             //var tester = new KestrelMetricServerTester();
-            //var tester = new AspNetCoreMiddlewareTester();
-            var tester = new GrpcMiddlewareTester();
+            var tester = new AspNetCoreMiddlewareTester();
+            //var tester = new GrpcMiddlewareTester();
             //var tester = new MetricServerTester();
 
             // For testing Kestrel metric server with HTTPS, you need at least a self-signed certificate (one included here)
@@ -100,7 +100,7 @@ namespace tester
             var cts = new CancellationTokenSource();
 
             var random = new Random();
-
+            /*
             // Update metrics on a regular interval until told to stop.
             var updateInterval = TimeSpan.FromSeconds(0.5);
             var updateTask = Task.Factory.StartNew(async delegate
@@ -134,14 +134,14 @@ namespace tester
                     }
                 }
             }).Result;
-
+            */
             Console.WriteLine("Press enter to stop metricServer");
             Console.ReadLine();
 
             cts.Cancel();
             try
             {
-                updateTask.GetAwaiter().GetResult();
+                //updateTask.GetAwaiter().GetResult();
             }
             catch (OperationCanceledException)
             {

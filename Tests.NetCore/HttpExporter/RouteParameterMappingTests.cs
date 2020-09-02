@@ -110,11 +110,12 @@ namespace Prometheus.Tests.HttpExporter
             var middleware = new HttpRequestCountMiddleware(_next, new HttpRequestCountOptions
             {
                 Counter = _metrics.CreateCounter("xxx", "", allLabelNames),
-                AdditionalRouteParameters =
+                AdditionalParameters =
                 {
-                    "foo",
-                    "bar",
-                    new HttpRouteParameterMapping("method", "route_method")
+                    new HttpRouteParameterMapping("foo"),
+                    new HttpRouteParameterMapping("bar"),
+                    new HttpRouteParameterMapping("method", "route_method"),
+                    new HttpStaticParameterMapping("cluster", "western_europe")
                 }
             });
             var child = (ChildBase)middleware.CreateChild(_context);
@@ -128,7 +129,8 @@ namespace Prometheus.Tests.HttpExporter
                 TestController,
                 "123", // foo
                 "", // bar
-                "excellent" // route_method
+                "excellent", // route_method
+                "western_europe"
             }, child.Labels.Values);
         }
 
@@ -146,16 +148,17 @@ namespace Prometheus.Tests.HttpExporter
                     ("method", "excellent")
                 });
 
-            var allLabelNames = HttpRequestLabelNames.All.Concat(new[] { "foo", "bar", "route_method" }).ToArray();
+            var allLabelNames = HttpRequestLabelNames.All.Concat(new[] { "foo", "bar", "route_method", "cluster" }).ToArray();
 
             var middleware = new HttpRequestCountMiddleware(_next, new HttpRequestCountOptions
             {
                 Registry = _registry,
-                AdditionalRouteParameters =
+                AdditionalParameters =
                 {
-                    "foo",
-                    "bar",
-                    new HttpRouteParameterMapping("method", "route_method")
+                    new HttpRouteParameterMapping("foo"),
+                    new HttpRouteParameterMapping("bar"),
+                    new HttpRouteParameterMapping("method", "route_method"),
+                    new HttpStaticParameterMapping("cluster", "western_europe")
                 }
             });
             var child = (ChildBase)middleware.CreateChild(_context);
@@ -169,7 +172,8 @@ namespace Prometheus.Tests.HttpExporter
                 TestController,
                 "123", // foo
                 "", // bar
-                "excellent" // route_method
+                "excellent", // route_method
+                "western_europe"
             }, child.Labels.Values);
         }
 
@@ -188,12 +192,12 @@ namespace Prometheus.Tests.HttpExporter
         [TestMethod]
         public void DefaultMetric_WithExtendedLabels_WithStandardParameterNameConflict_Throws()
         {
-            Assert.ThrowsException<ArgumentException>(delegate
+            Assert.ThrowsException<ArgumentException>((Action)delegate
             {
                 new HttpRequestCountMiddleware(_next, new HttpRequestCountOptions
                 {
                     Registry = _registry,
-                    AdditionalRouteParameters =
+                    AdditionalParameters =
                     {
                         new HttpRouteParameterMapping("controller", "xxxxx")
                     }
@@ -204,12 +208,12 @@ namespace Prometheus.Tests.HttpExporter
         [TestMethod]
         public void DefaultMetric_WithExtendedLabels_WithStandardLabelNameConflict_Throws()
         {
-            Assert.ThrowsException<ArgumentException>(delegate
+            Assert.ThrowsException<ArgumentException>((Action)delegate
             {
                 new HttpRequestCountMiddleware(_next, new HttpRequestCountOptions
                 {
                     Registry = _registry,
-                    AdditionalRouteParameters =
+                    AdditionalParameters =
                     {
                         new HttpRouteParameterMapping("xxxxx", "controller")
                     }
@@ -220,12 +224,12 @@ namespace Prometheus.Tests.HttpExporter
         [TestMethod]
         public void DefaultMetric_WithExtendedLabels_WithDuplicateParameterName_Throws()
         {
-            Assert.ThrowsException<ArgumentException>(delegate
+            Assert.ThrowsException<ArgumentException>((Action)delegate
             {
                 new HttpRequestCountMiddleware(_next, new HttpRequestCountOptions
                 {
                     Registry = _registry,
-                    AdditionalRouteParameters =
+                    AdditionalParameters =
                     {
                         new HttpRouteParameterMapping("foo", "bar"),
                         new HttpRouteParameterMapping("foo", "bang")
@@ -237,12 +241,12 @@ namespace Prometheus.Tests.HttpExporter
         [TestMethod]
         public void DefaultMetric_WithExtendedLabels_WithDuplicateLabelName_Throws()
         {
-            Assert.ThrowsException<ArgumentException>(delegate
+            Assert.ThrowsException<ArgumentException>((Action)delegate
             {
                 new HttpRequestCountMiddleware(_next, new HttpRequestCountOptions
                 {
                     Registry = _registry,
-                    AdditionalRouteParameters =
+                    AdditionalParameters =
                     {
                         new HttpRouteParameterMapping("foo", "bar"),
                         new HttpRouteParameterMapping("quux", "bar")
