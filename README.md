@@ -47,5 +47,5 @@ Metrics will looks as:
 
 ![received](https://github.com/alfhv/prometheus-net/blob/master/metric-received.png?raw=true)
 
-!(https://github.com/alfhv/prometheus-net/blob/master/metric-duration.png?raw=true)
+![duration](https://github.com/alfhv/prometheus-net/blob/master/metric-duration.png?raw=true)
 
