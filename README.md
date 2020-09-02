@@ -35,6 +35,17 @@ app.UseHttpMetrics(options =>
                     });
 ```
 
-what we have on metrics:
+How to test:
 
+Launch tester Tester.Netcore
+
+Request url: "http://127.0.0.1:21881/api/dummy/abc/method1"
+
+According configuration above, we are adding the static label *cluster="western_europe"* to all metrics, *myparam* label to duration metrics and *method_param* to total count metric, which cover all 3 cases on custom label on default metrics.
+
+Metrics will looks as:
+
+!(https://github.com/alfhv/prometheus-net/blob/master/metric-received.png?raw=true)
+
+!(https://github.com/alfhv/prometheus-net/blob/master/metric-duration.png?raw=true)
 
