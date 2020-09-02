@@ -35,6 +35,6 @@ app.UseHttpMetrics(options =>
                     });
 ```
 
-what we have on mtrics:
+what we have on metrics:
 
 
