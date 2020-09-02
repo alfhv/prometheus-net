@@ -45,7 +45,7 @@ According configuration above, we are adding the static label *cluster="western_
 
 Metrics will looks as:
 
-!https://github.com/alfhv/prometheus-net/blob/master/metric-received.png?raw=true
+![received](https://github.com/alfhv/prometheus-net/blob/master/metric-received.png?raw=true)
 
 !(https://github.com/alfhv/prometheus-net/blob/master/metric-duration.png?raw=true)
 
